@@ -269,10 +269,10 @@ function animate(){
             const dy = particles[i].y - particles[j].y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            if(distance < 200){
+            if(distance < 100){
                 ctx.beginPath();
-                ctx.strokeStyle = `rgba(55, 200, 255, ${2 - distance / 100})`;
-                ctx.lineWidth = 2 - (distance / 100);
+                ctx.strokeStyle = `rgba(55, 200, 255, ${1 - distance / 100})`;
+                ctx.lineWidth = 1 - (distance / 100);
                 ctx.moveTo(particles[i].x, particles[i].y);
                 ctx.lineTo(particles[j].x, particles[j].y);
                 ctx.stroke();
