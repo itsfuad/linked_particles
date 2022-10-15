@@ -20,15 +20,6 @@ window.addEventListener('resize', function(){
 function generatePosition(size){
     const x = Math.random() * (canvas.width - size * 2) + size;
     const y = Math.random() * (canvas.height - size * 2) + size;
-    let dx = mouse.x - x;
-    let dy = mouse.y - y;
-    let distance = Math.sqrt(dx * dx + dy * dy);
-
-    if(distance < mouse.radius){
-        //console.log('too close');
-        return generatePosition(size);
-    }
-
     return {x, y};
 }
 
@@ -98,16 +89,22 @@ class Particle{
             this.lineCol = '55, 200, 255';
         }
 
-        //if the particle is at the edge of the canvas, reverse the direction
-
+        //bounce off the walls
         if(this.x > canvas.width - this.size || this.x < this.size){
             this.speed.x = -this.speed.x;
         }
-
         if(this.y > canvas.height - this.size || this.y < this.size){
             this.speed.y = -this.speed.y;
         }
 
+        //if speed is too fast, slow it down
+        if(this.speed.x > 2 || this.speed.x < -2){
+            this.speed.x = this.speed.x / 1.1;
+        }
+        if(this.speed.y > 2 || this.speed.y < -2){
+            this.speed.y = this.speed.y / 1.1;
+        }
+        
 
         //detect collision with other particles
         for(let i = 0; i < particles.length; i++){
