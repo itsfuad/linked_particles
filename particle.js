@@ -5,79 +5,16 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-window.addEventListener('resize', function(){
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    init();
-});
-
-
-const mouse = {
-    x: undefined,
-    y: undefined,
-    radius: 80,
-    speed: 0,
-    weight: 1
-}
-
-//find the cursor position on the canvas from mouse and touch events
-window.addEventListener('mousemove', function(event){
-    mouse.x = event.x;
-    mouse.y = event.y;
-
-    mouse.speed = {
-        x: event.movementX,
-        y: event.movementY
-    }
-
-    particles.forEach(particle => {
-            //distance between mouse and particle
-            let dx = mouse.x - particle.x;
-            let dy = mouse.y - particle.y;
-            let distance = Math.sqrt(dx * dx + dy * dy);
-
-            //if the distance is less than the mouse radius, move the particle
-            if(distance <= mouse.radius){
-                //x, y position required to have a distance of mouse.radius from the mouse
-                let angle = Math.atan2(dy, dx);
-                let x = mouse.x + Math.cos(angle) * mouse.radius;
-                let y = mouse.y + Math.sin(angle) * mouse.radius;
-
-                particle.x += (particle.x - x) * 0.01;
-                particle.y += (particle.y - y) * 0.01;
-            }
-    });
-});
-
-window.addEventListener('touchmove', function(event){
-    mouse.x = event.touches[0].clientX;
-    mouse.y = event.touches[0].clientY;
-
-    mouse.speed = {
-        x: event.movementX,
-        y: event.movementY
-    }
-});
-
-window.addEventListener('touchstart', function(event){
-    mouse.x = event.touches[0].clientX;
-    mouse.y = event.touches[0].clientY;
-});
-
-window.addEventListener('touchend', function(){
-    mouse.x = undefined;
-    mouse.y = undefined;
-});
-
-window.addEventListener('mouseout', function(){
-    mouse.x = undefined;
-    mouse.y = undefined;
-});
 
 
 const particles = [];
-const particleCount = 50;
+let particleCount = 0;
+
+window.addEventListener('resize', function(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    init();
+});
 
 
 function generatePosition(size){
@@ -108,6 +45,7 @@ class Particle{
         this.opacity = 0;
         this.weight = weight;
         this.col = color;
+        this.lineCol = '55, 200, 255';
         this.speed = {x: directionX / weight, y: directionY / weight};
     }
 
@@ -133,12 +71,13 @@ class Particle{
         if(mouse.x && mouse.y){
 
             //show mouse radius
-            
+            /*
             ctx.lineWidth = 1;
             ctx.strokeStyle = `rgba(55, 200, 255, 0.02)`;
             ctx.beginPath();
             ctx.arc(mouse.x, mouse.y, mouse.radius, 0, Math.PI * 2);
             ctx.stroke();
+            */
 
             //distance between mouse and particle
             let dx = mouse.x - this.x;
@@ -147,35 +86,28 @@ class Particle{
 
             //if the distance is less than the mouse radius, move the particle
             if(distance <= mouse.radius){
-                //x, y position required to have a distance of mouse.radius from the mouse
-                let angle = Math.atan2(dy, dx);
-                const speed = mouse.speed.x ** 2 + mouse.speed.y ** 2;
-                const force = (mouse.radius - distance) * mouse.weight * speed;
-                const x = Math.cos(angle) * force;
-                const y = Math.sin(angle) * force;
-
-                this.x -= x;
-                this.y -= y;
+                this.col = '255, 255, 0';
+                this.lineCol = '255, 255, 0';
+            }else{
+                this.col = '255, 255, 255';
+                this.lineCol = '55, 200, 255';
             }
 
+        }else{
+            this.col = '255, 255, 255';
+            this.lineCol = '55, 200, 255';
         }
 
-        //if particle is out of canvas, randomize its position
-        if(this.x - this.size > canvas.width || this.x + this.size < 0){
-            this.opacity = 0;
+        //if the particle is at the edge of the canvas, reverse the direction
 
-            this.x = generatePosition(this.size).x;
-            this.speed.x = (Math.random() * 2 - 1) / this.weight;
-            return;
+        if(this.x > canvas.width - this.size || this.x < this.size){
+            this.speed.x = -this.speed.x;
         }
-        
-        if(this.y - this.size > canvas.height || this.y + this.size < 0){
-            this.opacity = 0;
 
-            this.y = generatePosition(this.size).y;
-            this.speed.y = (Math.random() * 2 - 1) / this.weight;
-            return;
+        if(this.y > canvas.height - this.size || this.y < this.size){
+            this.speed.y = -this.speed.y;
         }
+
 
         //detect collision with other particles
         for(let i = 0; i < particles.length; i++){
@@ -187,6 +119,7 @@ class Particle{
         }
     }
 }
+
 
 function resolveCollision(particle, otherParticle){
     const xVelocityDiff = particle.speed.x - otherParticle.speed.x;
@@ -246,19 +179,34 @@ function distance(x1, y1, x2, y2){
 function init(){
     //clear particles array
 
+    let screenSize = (canvas.width * canvas.height / 200);
+    let particleDensity = 0.05;
+    
+    particleCount = Math.floor(screenSize * particleDensity);
+    
     particles.length = 0;
-
+    
     for(let i = 0; i < particleCount; i++){
-
+        
         const size = Math.random() * 3 + 1;
         const {x, y} = generatePosition(size);
 
-        const color = '255,255,255';
+        const color = '255, 255, 255';
         const weight = 2/size;
 
         particles.push(new Particle(x, y, size, color, weight));
     }
 }
+
+const mouse = {
+    x: null,
+    y: null,
+    radius: 100,
+    speed: {x: 0, y: 0},
+    weight: 0.1
+}
+
+
 
 function animate(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -271,8 +219,8 @@ function animate(){
 
             if(distance < 200){
                 ctx.beginPath();
-                ctx.strokeStyle = `rgba(55, 200, 255, ${2 - distance / 100})`;
-                ctx.lineWidth = 2 - (distance / 100);
+                ctx.strokeStyle = `rgba(${particles[i].lineCol}, ${2 - distance / 50})`;
+                ctx.lineWidth = 2 - (distance / 50);
                 ctx.moveTo(particles[i].x, particles[i].y);
                 ctx.lineTo(particles[j].x, particles[j].y);
                 ctx.stroke();
@@ -286,6 +234,37 @@ function animate(){
     });
     requestAnimationFrame(animate);
 }
+
+
+document.addEventListener('mousemove', (e) => {
+    mouse.x = e.x;
+    mouse.y = e.y;
+});
+
+document.addEventListener('touchmove', (e) => {
+    mouse.x = e.touches[0].clientX;
+    mouse.y = e.touches[0].clientY;
+});
+
+document.addEventListener('touchstart', (e) => {
+    mouse.x = e.touches[0].clientX;
+    mouse.y = e.touches[0].clientY;
+});
+
+//unset mouse position when mouse leaves canvas
+document.addEventListener('mouseleave', () => {
+    mouse.x = undefined;
+    mouse.y = undefined;
+});
+
+//unset mouse position when touch ends
+document.addEventListener('touchend', () => {
+    mouse.x = undefined;
+    mouse.y = undefined;
+});
+
+
+
 
 init();
 animate();
