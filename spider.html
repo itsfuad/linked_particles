@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script defer src="./particle.js"></script>
-    <title>Particles</title>
+   
+    <script defer src="./robot.js"></script>
+    <title>Spider</title>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
+    <canvas id="canvas" class="canvas particles active"></canvas>
 
     <style>
         *{
@@ -22,12 +23,15 @@
 
         body{
             overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
-
-
         #canvas{
-            background: #111d2a;
+            background: #a6afb8;
         }
+
     </style>
 </body>
 </html>
