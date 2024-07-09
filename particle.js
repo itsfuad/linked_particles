@@ -24,8 +24,8 @@ function generatePosition(size){
 }
 
 
-class Particle{
-    constructor(x, y, size, color, weight){
+class Particle {
+    constructor(x, y, size, color, weight) {
         const directionX = (Math.random() * 2 - 1);
         const directionY = (Math.random() * 2 - 1);
         this.x = x;
@@ -40,82 +40,88 @@ class Particle{
         this.speed = {x: directionX / weight, y: directionY / weight};
     }
 
-    draw(){
+    draw() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${this.col},${this.opacity})`;
         ctx.fill();
     }
 
-    update(){
+    update() {
+        this.increaseOpacity();
+        this.move();
+        this.checkMouseInteraction();
+        this.bounceOffWalls();
+        this.regulateSpeed();
+        this.detectCollisions();
+    }
 
-        //gradually increase opacity
-        if(this.opacity < 1){
+    increaseOpacity() {
+        if (this.opacity < 1) {
             this.opacity += 0.01;
         }
-        
+    }
+
+    move() {
         this.x += this.speed.x;
         this.y += this.speed.y;
-        
+    }
 
-        //check mouse position and move the particle
-        if(mouse.x && mouse.y){
-
-            //show mouse radius
-            /*
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = `rgba(55, 200, 255, 0.02)`;
-            ctx.beginPath();
-            ctx.arc(mouse.x, mouse.y, mouse.radius, 0, Math.PI * 2);
-            ctx.stroke();
-            */
-
-            //distance between mouse and particle
+    checkMouseInteraction() {
+        if (mouse.x && mouse.y) {
             let dx = mouse.x - this.x;
             let dy = mouse.y - this.y;
             let distance = Math.sqrt(dx * dx + dy * dy);
 
-            //if the distance is less than the mouse radius, move the particle
-            if(distance <= mouse.radius){
+            if (distance <= mouse.radius) {
                 this.col = '255, 255, 0';
                 this.lineCol = '255, 255, 0';
-            }else{
-                this.col = '255, 255, 255';
-                this.lineCol = '55, 200, 255';
+            } else {
+                this.resetColor();
             }
-
-        }else{
-            this.col = '255, 255, 255';
-            this.lineCol = '55, 200, 255';
+        } else {
+            this.resetColor();
         }
+    }
 
-        //bounce off the walls
-        if(this.x > canvas.width - this.size || this.x < this.size){
+    resetColor() {
+        this.col = '255, 255, 255';
+        this.lineCol = '55, 200, 255';
+    }
+
+    bounceOffWalls() {
+        if (this.x > canvas.width - this.size || this.x < this.size) {
             this.speed.x = -this.speed.x;
         }
-        if(this.y > canvas.height - this.size || this.y < this.size){
+        if (this.y > canvas.height - this.size || this.y < this.size) {
             this.speed.y = -this.speed.y;
         }
+    }
 
-        //if speed is too fast, slow it down
-        if(this.speed.x > 2 || this.speed.x < -2){
-            this.speed.x = this.speed.x / 1.1;
+    regulateSpeed() {
+        if (Math.abs(this.speed.x) > 2) {
+            this.speed.x /= 1.1;
         }
-        if(this.speed.y > 2 || this.speed.y < -2){
-            this.speed.y = this.speed.y / 1.1;
+        if (Math.abs(this.speed.y) > 2) {
+            this.speed.y /= 1.1;
         }
-        
+    }
 
-        //detect collision with other particles
-        for(let i = 0; i < particles.length; i++){
-            if(this === particles[i]) continue;
+    detectCollisions() {
+        for (const particle of particles) {
+            if (this === particle) continue;
 
-            if(distance(this.x, this.y, particles[i].x, particles[i].y) < this.size + particles[i].size){
-                resolveCollision(this, particles[i]);
+            if (this.getDistance(particle) < this.size + particle.size) {
+                resolveCollision(this, particle);
             }
         }
     }
+
+    getDistance(otherParticle) {
+        return Math.sqrt((this.x - otherParticle.x) ** 2 + (this.y - otherParticle.y) ** 2);
+    }
 }
+
 
 
 function resolveCollision(particle, otherParticle){

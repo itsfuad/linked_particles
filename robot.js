@@ -10,227 +10,206 @@ canvas.height = window.innerHeight;
 const enemySprite = new Image();
 enemySprite.src = './bug.png';
 
-enemySprite.addEventListener('load', () =>{
+// Event listener to initialize the game when the enemy sprite loads
+enemySprite.addEventListener('load', () => {
 
-    const spriteWidth = enemySprite.width/14;
-    const spriteHeight = enemySprite.height/18;
+    const spriteWidth = enemySprite.width / 14;
+    const spriteHeight = enemySprite.height / 18;
+
+    // Initialize the player object
+    const enemy = new Player('./bug.png', spriteWidth, spriteHeight, 14, 18);
+
+    // Mouse position object
+    const mouse = { x: null, y: null };
+
+    // Rotation object for device orientation
+    const rotation = { x: 0, y: 0, z: 0 };
+
+    // Event listeners for mouse and touch interactions
+    addMouseTouchListeners(mouse, enemy);
     
-    let ROW = 12;
-    let COL = 0;
-    let colCount = 9;
-    let counter = 0;
-    
-    class Player{
-        constructor(sprite, n_cols, n_rows, x = 0, y = 0){
-            this.sprite = new Image();
-            this.sprite.src = sprite;
-            this.spriteWidth = this.sprite.width/n_cols;
-            this.spriteHeight = this.sprite.height/n_rows;
-            this.SPRITE_NO = 12;
-            this.CURRENT_FRAME = 0;
-            this.frames = 9;
-            this.counter = 0;
-            this.idle = true;
-            this.spriteMap = {
-                'up': 0,
-                'down': 4,
-                'left': 6,
-                'right': 2,
-                'up-left': 7,
-                'up-right': 1,
-                'down-left': 5,
-                'down-right': 3,
-                'idle': 12
-            }
-            this.speed = {x: 0, y: 0};
-            this.x = canvas.width/2 - this.spriteWidth/2 + x;
-            this.y = canvas.height/2 - this.spriteHeight/2 + y;
+    // Event listener for device orientation
+    addDeviceOrientationListener(rotation);
+
+    // Event listener for window resize
+    addResizeListener(enemy);
+
+    // Start the animation loop
+    animate(enemy);
+});
+
+// Player class to represent the player sprite
+class Player {
+    constructor(sprite, spriteWidth, spriteHeight, n_cols, n_rows, x = 0, y = 0) {
+        this.sprite = new Image();
+        this.sprite.src = sprite;
+        this.spriteWidth = spriteWidth / n_cols;
+        this.spriteHeight = spriteHeight / n_rows;
+        this.SPRITE_NO = 12;
+        this.CURRENT_FRAME = 0;
+        this.frames = 9;
+        this.counter = 0;
+        this.idle = true;
+        this.spriteMap = {
+            'up': 0,
+            'down': 4,
+            'left': 6,
+            'right': 2,
+            'up-left': 7,
+            'up-right': 1,
+            'down-left': 5,
+            'down-right': 3,
+            'idle': 12
+        };
+        this.speed = { x: 0, y: 0 };
+        this.x = canvas.width / 2 - this.spriteWidth / 2 + x;
+        this.y = canvas.height / 2 - this.spriteHeight / 2 + y;
+        this.fps = 2;
+    }
+
+    update(mouse) {
+        if (!this.idle) {
+            this.moveTowardsMouse(mouse);
+        } else {
+            this.SPRITE_NO = this.spriteMap['idle'];
             this.fps = 2;
         }
-    
-        update(){
-    
-            if (!this.idle){
-                //go to mouse position
-                const dx = this.x - mouse2.x;
-                const dy = this.y - mouse2.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                const angle = Math.atan2(dy, dx);
-                //angle to degrees
-                const angle2 = angle * 180 / Math.PI;
-                //console.log(angle2);
-    
-                //set sprite direction
-                if (angle2 >= 0 && angle2 <= 22.5){
-                    this.SPRITE_NO = this.spriteMap['left'];
-                    this.frames = 7;
-                } else if (angle2 > 22.5 && angle2 <= 67.5){    
-                    this.SPRITE_NO = this.spriteMap['up-left'];
-                    this.frames = 7;
-                } else if (angle2 > 67.5 && angle2 <= 112.5){
-                    this.SPRITE_NO = this.spriteMap['up'];
-                    this.frames = 7;
-                } else if (angle2 > 112.5 && angle2 <= 157.5){
-                    this.SPRITE_NO = this.spriteMap['up-right'];
-                    this.frames = 7;
-                } else if (angle2 > 157.5 && angle2 <= 180){
-                    this.SPRITE_NO = this.spriteMap['right'];
-                    this.frames = 7;
-                } else if (angle2 > -180 && angle2 <= -157.5){
-                    this.SPRITE_NO = this.spriteMap['right'];
-                    this.frames = 7;
-                } else if (angle2 > -157.5 && angle2 <= -112.5){
-                    this.SPRITE_NO = this.spriteMap['down-right'];
-                    this.frames = 7;
-                } else if (angle2 > -112.5 && angle2 <= -67.5){
-                    this.SPRITE_NO = this.spriteMap['down'];
-                    this.frames = 7;
-                } else if (angle2 > -67.5 && angle2 <= -22.5){
-                    this.SPRITE_NO = this.spriteMap['down-left'];
-                    this.frames = 7;
-                } else if (angle2 > -22.5 && angle2 <= 0){
-                    this.SPRITE_NO = this.spriteMap['left'];
-                    this.frames = 7;
-                }
-    
-    
-    
-                this.speed.x = Math.cos(angle) * 5;
-                this.speed.y = Math.sin(angle) * 5;
-    
-                this.x -= this.speed.x;
-                this.y -= this.speed.y;
-                
-                this.fps = 6;
-                
-                //check if player is close to mouse
-                if (distance < 10){
-                    this.speed.x = 0;
-                    this.speed.y = 0;
-                    this.idle = true;
-                    this.SPRITE_NO = this.spriteMap['idle'];
-                    //console.log('idle');
-                    this.fps = 2;
-                }
-                //this.x += this.speed.x / 5;
-                //this.y += this.speed.y / 5;
-    
-            }else{
-                this.SPRITE_NO = this.spriteMap['idle'];
-                this.fps = 2;
-            }
-    
-            this.CURRENT_FRAME = Math.floor(this.counter++ * (this.fps / 10) ) % this.frames;
-            //translate to center of sprite
-            
-            ctx.drawImage(this.sprite, this.CURRENT_FRAME * this.spriteWidth, this.SPRITE_NO * this.spriteHeight, this.spriteWidth, this.spriteHeight, this.x, this.y - this.spriteHeight/2, this.spriteWidth, this.spriteHeight);
+
+        this.animateSprite();
+        this.draw();
+    }
+
+    moveTowardsMouse(mouse) {
+        const { dx, dy, distance, angle, angle2 } = this.calculateMovement(mouse);
+
+        this.setSpriteDirection(angle2);
+        this.setSpeed(angle);
+
+        this.x -= this.speed.x;
+        this.y -= this.speed.y;
+
+        if (distance < 10) {
+            this.stopMoving();
         }
-        
-    
     }
-    
-    const mouse2 = {
-        x: null,
-        y: null
+
+    calculateMovement(mouse) {
+        const dx = this.x - mouse.x;
+        const dy = this.y - mouse.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        const angle2 = angle * 180 / Math.PI;
+
+        return { dx, dy, distance, angle, angle2 };
     }
-    
-    //get mouse click or touch
-    window.addEventListener('click', function(event){
-    
-        mouse2.x = event.x - Enemy.spriteWidth/2;
-        mouse2.y = event.y - Enemy.spriteHeight/2;
-    
-        Enemy.idle = false;
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-        mouse2.x = e.x - Enemy.spriteWidth/2;
-        mouse2.y = e.y - Enemy.spriteHeight/2;
-    
-        Enemy.idle = false;
-    });
-    
+
+    setSpriteDirection(angle2) {
+        if (angle2 >= 0 && angle2 <= 22.5 || angle2 > -22.5 && angle2 <= 0) {
+            this.SPRITE_NO = this.spriteMap['left'];
+        } else if (angle2 > 22.5 && angle2 <= 67.5) {
+            this.SPRITE_NO = this.spriteMap['up-left'];
+        } else if (angle2 > 67.5 && angle2 <= 112.5) {
+            this.SPRITE_NO = this.spriteMap['up'];
+        } else if (angle2 > 112.5 && angle2 <= 157.5) {
+            this.SPRITE_NO = this.spriteMap['up-right'];
+        } else if (angle2 > 157.5 && angle2 <= 180 || angle2 > -180 && angle2 <= -157.5) {
+            this.SPRITE_NO = this.spriteMap['right'];
+        } else if (angle2 > -157.5 && angle2 <= -112.5) {
+            this.SPRITE_NO = this.spriteMap['down-right'];
+        } else if (angle2 > -112.5 && angle2 <= -67.5) {
+            this.SPRITE_NO = this.spriteMap['down'];
+        } else if (angle2 > -67.5 && angle2 <= -22.5) {
+            this.SPRITE_NO = this.spriteMap['down-left'];
+        }
+
+        this.frames = 7;
+    }
+
+    setSpeed(angle) {
+        this.speed.x = Math.cos(angle) * 5;
+        this.speed.y = Math.sin(angle) * 5;
+        this.fps = 6;
+    }
+
+    stopMoving() {
+        this.speed.x = 0;
+        this.speed.y = 0;
+        this.idle = true;
+        this.SPRITE_NO = this.spriteMap['idle'];
+        this.fps = 2;
+    }
+
+    animateSprite() {
+        this.CURRENT_FRAME = Math.floor(this.counter++ * (this.fps / 10)) % this.frames;
+    }
+
+    draw() {
+        ctx.drawImage(
+            this.sprite,
+            this.CURRENT_FRAME * this.spriteWidth,
+            this.SPRITE_NO * this.spriteHeight,
+            this.spriteWidth,
+            this.spriteHeight,
+            this.x,
+            this.y - this.spriteHeight / 2,
+            this.spriteWidth,
+            this.spriteHeight
+        );
+    }
+}
+
+// Function to add mouse and touch event listeners
+function addMouseTouchListeners(mouse, player) {
+    const setMousePosition = (event) => {
+        mouse.x = event.x - player.spriteWidth / 2;
+        mouse.y = event.y - player.spriteHeight / 2;
+        player.idle = false;
+    };
+
+    window.addEventListener('click', setMousePosition);
+    document.addEventListener('mousemove', setMousePosition);
     document.addEventListener('touchmove', (e) => {
-        mouse2.x = e.touches[0].clientX - Enemy.spriteWidth/2;
-        mouse2.y = e.touches[0].clientY - Enemy.spriteHeight/2;
-    
-        Enemy.idle = false;
+        setMousePosition(e.touches[0]);
     });
-    
     document.addEventListener('touchstart', (e) => {
-        mouse2.x = e.touches[0].clientX - Enemy.spriteWidth/2;
-        mouse2.y = e.touches[0].clientY - Enemy.spriteHeight/2;
-    
-        Enemy.idle = false;
+        setMousePosition(e.touches[0]);
     });
-    
-    //unset mouse position when mouse leaves canvas
-    document.addEventListener('mouseleave', () => {
-        mouse2.x = undefined;
-        mouse2.y = undefined;
-    
-        Enemy.idle = true;
-    });
-    
-    //unset mouse position when touch ends
-    document.addEventListener('touchend', () => {
-        mouse2.x = undefined;
-        mouse2.y = undefined;
-    
-        Enemy.idle = true;
-    });
-    
-    
-    const Rotation = {
-        x: 0,
-        y: 0,
-        z: 0
-    }
-    
-    
-    
-    //if has x, y, z sensor
+
+    const resetMousePosition = () => {
+        mouse.x = undefined;
+        mouse.y = undefined;
+        player.idle = true;
+    };
+
+    document.addEventListener('mouseleave', resetMousePosition);
+    document.addEventListener('touchend', resetMousePosition);
+}
+
+// Function to add device orientation event listener
+function addDeviceOrientationListener(rotation) {
     if (window.DeviceOrientationEvent) {
-        window.addEventListener('deviceorientation', function(event) {
-    
-            console.log(event.alpha);
-            console.log(event.beta);
-            console.log(event.gamma);
-            Rotation.x = event.alpha;
-            Rotation.y = event.beta;
-            Rotation.z = event.gamma;
-    
-        }
-        , false);
+        window.addEventListener('deviceorientation', (event) => {
+            rotation.x = event.alpha;
+            rotation.y = event.beta;
+            rotation.z = event.gamma;
+        }, false);
     }
-    
-    
-    
-    //resize
-    window.addEventListener('resize', function(){
+}
+
+// Function to add window resize event listener
+function addResizeListener(player) {
+    window.addEventListener('resize', () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        
-        //reposition player
-        Enemy.x = canvas.width/2 - Enemy.spriteWidth/2;
-        Enemy.y = canvas.height/2 - Enemy.spriteHeight/2;
-    
+        player.x = canvas.width / 2 - player.spriteWidth / 2;
+        player.y = canvas.height / 2 - player.spriteHeight / 2;
     });
-    
-    
-    
-    
-    const Enemy = new Player('./bug.png', 14, 18);
-    
-    
-    function animate(){
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        //COL = Math.floor(counter++/10)%colCount;
-        
-        //ctx.drawImage(enemySprite, COL * spriteWidth, ROW * spriteHeight, spriteWidth, spriteHeight, canvas.width/2 - spriteWidth/2, canvas.height/2 - spriteHeight/2, spriteWidth, spriteHeight);
-        Enemy.update();
-        requestAnimationFrame(animate);
-    }
-    
-    animate();
-});
+}
+
+// Function to animate the player sprite
+function animate(player) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    player.update(mouse);
+    requestAnimationFrame(() => animate(player));
+}
+

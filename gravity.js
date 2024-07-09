@@ -12,7 +12,7 @@ window.addEventListener('resize', function(){
     init();
 });
 
-class object{
+class Object{
     constructor(x, y, radius, color, weight){
         this.x = x;
         this.y = y;
@@ -32,7 +32,7 @@ class object{
     }
 }
 
-class Planet extends object{
+class Planet extends Object{
     constructor(x, y, radius, color, weight, velocity){
         super(x, y, radius, color, weight);
         this.speed = {x: velocity/100, y: velocity/100};
@@ -44,7 +44,7 @@ class Planet extends object{
     }
 }
 
-class Star extends object{
+class Star extends Object{
     constructor(x, y, radius, color, weight){
         super(x, y, radius, color, weight);
         this.opacity = 0.004;
@@ -126,9 +126,6 @@ function animate(){
     sun.update();
     
     planets.forEach(planet => {
-
-        //orbit(sun, planet);
-
         planet.draw();
         planet.update();
     });
