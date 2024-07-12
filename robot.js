@@ -6,38 +6,6 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-//player sprite
-const enemySprite = new Image();
-enemySprite.src = './bug.png';
-
-// Event listener to initialize the game when the enemy sprite loads
-enemySprite.addEventListener('load', () => {
-
-    const spriteWidth = enemySprite.width / 14;
-    const spriteHeight = enemySprite.height / 18;
-
-    // Initialize the player object
-    const enemy = new Player('./bug.png', spriteWidth, spriteHeight, 14, 18);
-
-    // Mouse position object
-    const mouse = { x: null, y: null };
-
-    // Rotation object for device orientation
-    const rotation = { x: 0, y: 0, z: 0 };
-
-    // Event listeners for mouse and touch interactions
-    addMouseTouchListeners(mouse, enemy);
-    
-    // Event listener for device orientation
-    addDeviceOrientationListener(rotation);
-
-    // Event listener for window resize
-    addResizeListener(enemy);
-
-    // Start the animation loop
-    animate(enemy);
-});
-
 // Player class to represent the player sprite
 class Player {
     constructor(sprite, spriteWidth, spriteHeight, n_cols, n_rows, x = 0, y = 0) {
@@ -62,6 +30,7 @@ class Player {
             'idle': 12
         };
         this.speed = { x: 0, y: 0 };
+        // Initial position of the player sprite, centered on the canvas
         this.x = canvas.width / 2 - this.spriteWidth / 2 + x;
         this.y = canvas.height / 2 - this.spriteHeight / 2 + y;
         this.fps = 2;
@@ -80,7 +49,7 @@ class Player {
     }
 
     moveTowardsMouse(mouse) {
-        const { dx, dy, distance, angle, angle2 } = this.calculateMovement(mouse);
+        const { distance, angle, angle2 } = this.calculateMovement(mouse);
 
         this.setSpriteDirection(angle2);
         this.setSpeed(angle);
@@ -104,24 +73,33 @@ class Player {
     }
 
     setSpriteDirection(angle2) {
-        if (angle2 >= 0 && angle2 <= 22.5 || angle2 > -22.5 && angle2 <= 0) {
-            this.SPRITE_NO = this.spriteMap['left'];
-        } else if (angle2 > 22.5 && angle2 <= 67.5) {
-            this.SPRITE_NO = this.spriteMap['up-left'];
-        } else if (angle2 > 67.5 && angle2 <= 112.5) {
-            this.SPRITE_NO = this.spriteMap['up'];
-        } else if (angle2 > 112.5 && angle2 <= 157.5) {
-            this.SPRITE_NO = this.spriteMap['up-right'];
-        } else if (angle2 > 157.5 && angle2 <= 180 || angle2 > -180 && angle2 <= -157.5) {
-            this.SPRITE_NO = this.spriteMap['right'];
-        } else if (angle2 > -157.5 && angle2 <= -112.5) {
-            this.SPRITE_NO = this.spriteMap['down-right'];
-        } else if (angle2 > -112.5 && angle2 <= -67.5) {
-            this.SPRITE_NO = this.spriteMap['down'];
-        } else if (angle2 > -67.5 && angle2 <= -22.5) {
-            this.SPRITE_NO = this.spriteMap['down-left'];
+        switch (true) {
+            case (angle2 >= 0 && angle2 <= 22.5) || (angle2 > -22.5 && angle2 <= 0):
+                this.SPRITE_NO = this.spriteMap['left'];
+                break;
+            case angle2 > 22.5 && angle2 <= 67.5:
+                this.SPRITE_NO = this.spriteMap['up-left'];
+                break;
+            case angle2 > 67.5 && angle2 <= 112.5:
+                this.SPRITE_NO = this.spriteMap['up'];
+                break;
+            case angle2 > 112.5 && angle2 <= 157.5:
+                this.SPRITE_NO = this.spriteMap['up-right'];
+                break;
+            case (angle2 > 157.5 && angle2 <= 180) || (angle2 > -180 && angle2 <= -157.5):
+                this.SPRITE_NO = this.spriteMap['right'];
+                break;
+            case angle2 > -157.5 && angle2 <= -112.5:
+                this.SPRITE_NO = this.spriteMap['down-right'];
+                break;
+            case angle2 > -112.5 && angle2 <= -67.5:
+                this.SPRITE_NO = this.spriteMap['down'];
+                break;
+            case angle2 > -67.5 && angle2 <= -22.5:
+                this.SPRITE_NO = this.spriteMap['down-left'];
+                break;
         }
-
+    
         this.frames = 7;
     }
 
@@ -157,6 +135,35 @@ class Player {
         );
     }
 }
+
+//player sprite
+const enemySprite = new Image();
+enemySprite.src = './bug.png';
+// Mouse position object
+const mouse = { x: null, y: null };
+
+// Event listener to initialize the game when the enemy sprite loads
+enemySprite.addEventListener('load', () => {
+const spriteWidth = enemySprite.width;
+const spriteHeight = enemySprite.height;
+
+// Initialize the player object
+const enemy = new Player('./bug.png', spriteWidth, spriteHeight, 14, 18);
+// Rotation object for device orientation
+const rotation = { x: 0, y: 0, z: 0 };
+
+    // Event listeners for mouse and touch interactions
+    addMouseTouchListeners(mouse, enemy);
+    
+    // Event listener for device orientation
+    addDeviceOrientationListener(rotation);
+
+    // Event listener for window resize
+    addResizeListener(enemy);
+
+    // Start the animation loop
+    animate(enemy);
+});
 
 // Function to add mouse and touch event listeners
 function addMouseTouchListeners(mouse, player) {
